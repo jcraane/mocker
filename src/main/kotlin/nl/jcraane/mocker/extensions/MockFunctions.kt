@@ -25,19 +25,27 @@ private val log = LoggerFactory.getLogger("MockFunctions")
 
 val UTF_8: Charset = Charset.forName("UTF-8")
 
-suspend fun ApplicationCall.respondContents(classPathResource: String, contentType: ContentType? = null) {
+suspend fun ApplicationCall.respondContents(
+    classPathResource: String,
+    contentType: ContentType? = null,
+    httpStatusCode: HttpStatusCode = HttpStatusCode.OK
+) {
     val resource = javaClass.getResource(classPathResource)
     if (resource != null) {
         respondBytes(
-            resource.readBytes(), contentType ?: determineContentTypeOnFileExtensions(
+            bytes = resource.readBytes(),
+            contentType = contentType ?: determineContentTypeOnFileExtensions(
                 classPathResource
-            )
+            ),
+            status = httpStatusCode
         )
     } else {
         log.error(
-            "Classpath resource [$classPathResource] cannot be found. Make sure it exists in src/main/resource${classPathResource.prependIfMissing(
-                "/"
-            )} and starts with a '/' (forward slash) character."
+            "Classpath resource [$classPathResource] cannot be found. Make sure it exists in src/main/resource${
+                classPathResource.prependIfMissing(
+                    "/"
+                )
+            } and starts with a '/' (forward slash) character."
         )
         respond(HttpStatusCode.InternalServerError)
     }
